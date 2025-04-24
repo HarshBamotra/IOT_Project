@@ -1,0 +1,5 @@
+*.json
+*.sqlite
+*.sqlite3
+migrations
+.DS_Store
