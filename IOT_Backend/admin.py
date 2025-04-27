@@ -3,8 +3,8 @@ from .models import *
 
 
 class SensorDataAdmin(admin.ModelAdmin):
-    search_fields = ['mote_id']
-    list_display = ['mote_id', 'timestamp', 'location', 'temperature', 'gas_concentration']
-    list_filter = ['mote_id']
+    search_fields = ['node_id']
+    list_display = ['node_id', 'timestamp', 'AQI', 'added_at']
+    list_filter = ['node_id']
 
 admin.site.register(SensorData, SensorDataAdmin)
