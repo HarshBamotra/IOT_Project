@@ -77,8 +77,12 @@ WSGI_APPLICATION = 'IOT_Project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+from dotenv import load_dotenv
+
+load_dotenv()  # Make sure to load your .env file if you're testing locally
+
 DATABASES = {
-    'default': dj_database_url.config(default=f"postgres://{os.getenv('DB_USER', 'postgres')}:{os.getenv('DB_PASSWORD', '1111')}@{os.getenv('DB_HOST', 'localhost')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'paisaalgo')}")
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
 
 
