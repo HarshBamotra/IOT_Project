@@ -5,26 +5,17 @@ from rest_framework import status
 from datetime import datetime
 import csv
 import io
-import os
 
 from .models import *
 from .serializers import *
 
 
-CSV_FILE = 'sensor_data.csv'
-FIELDNAMES = [
-    "id", "node_id", "timestamp",
-    "pm2_5", "pm10", "NO", "NO2", "NOX", "NH3",
-    "CO", "SO2", "O3", "Benzene", "Toluene", "Xylene",
-    "AQI", "added_at"
-]
-
-def create_base_entry(idx: int):
-    now = datetime.utcnow().isoformat() + "Z"
+# Base single sensor template
+def create_base_entry():
     return {
-        "id": idx,
-        "node_id": str(idx),
-        "timestamp": now,
+        "id": 0,
+        "node_id": "0",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
         "pm2_5": 175.0541244,
         "pm10": 225.6159204,
         "NO": 63.16595663,
@@ -38,51 +29,14 @@ def create_base_entry(idx: int):
         "Toluene": 2.545848505,
         "Xylene": 5.436573227,
         "AQI": 0,
-        "added_at": now
+        "added_at": datetime.utcnow().isoformat() + "Z"
     }
 
-def write_csv(data: list[dict]):
-    with open(CSV_FILE, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
-        writer.writeheader()
-        writer.writerows(data)
-
-def load_csv() -> list[dict]:
-    if not os.path.exists(CSV_FILE):
-        # bootstrap with 50 entries
-        data = [create_base_entry(i) for i in range(1, 51)]
-        write_csv(data)
-        return data
-
-    data = []
-    with open(CSV_FILE, newline='') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            # convert types
-            sensor = {
-                "id": int(row["id"]),
-                "node_id": row["node_id"],
-                "timestamp": row["timestamp"],
-                "pm2_5": float(row["pm2_5"]),
-                "pm10": float(row["pm10"]),
-                "NO": float(row["NO"]),
-                "NO2": float(row["NO2"]),
-                "NOX": float(row["NOX"]),
-                "NH3": float(row["NH3"]),
-                "CO": float(row["CO"]),
-                "SO2": float(row["SO2"]),
-                "O3": float(row["O3"]),
-                "Benzene": float(row["Benzene"]),
-                "Toluene": float(row["Toluene"]),
-                "Xylene": float(row["Xylene"]),
-                "AQI": float(row["AQI"]),
-                "added_at": row["added_at"]
-            }
-            data.append(sensor)
-    return data
-
-# Global in‐memory cache (always kept in sync with disk)
-current_sensor_data = load_csv()
+# Initialize global sensor data store
+current_sensor_data = [create_base_entry() for _ in range(50)]
+for idx, sensor in enumerate(current_sensor_data, start=1):
+    sensor["id"] = idx
+    sensor["node_id"] = str(idx)
     
 
 @api_view(['GET', 'POST'])
@@ -140,8 +94,7 @@ def getMoteData(request):
                         sensor['added_at'] = datetime.utcnow().isoformat() + 'Z'
                         updated += 1
                         break
-                    
-            write_csv(current_sensor_data)
+
             return Response({'message': f'CSV processed, updated {updated} sensors.'}, status=status.HTTP_200_OK)
 
     except Exception as e:
